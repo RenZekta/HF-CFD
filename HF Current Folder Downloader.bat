@@ -38,6 +38,19 @@ echo ---------------------------------------------------
 :: Execute the user command with the local directory flag appended
 !USER_INPUT! --local-dir "%CURRENT_DIR%"
 
+:: Check if the download was successful and clean up the cache
+if %errorlevel% equ 0 (
+    if exist "%CURRENT_DIR%\.cache" (
+        echo.
+        echo Cleaning up .cache folder...
+        rd /s /q "%CURRENT_DIR%\.cache"
+        echo .cache folder deleted successfully.
+    )
+) else (
+    echo.
+    echo [Warning] Download was interrupted or failed. Keeping .cache folder.
+)
+
 echo ---------------------------------------------------
 echo Done! Press any key to exit...
 pause > nul

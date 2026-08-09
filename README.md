@@ -6,7 +6,7 @@ Type `cfd` and paste your `hf download` command in any folder, and CFD calls HF 
 
 ## Features
 
-- **Callable from anywhere** — install once, then run `cfd` from any folder, just like `npm` or `git`.
+- **Call from anywhere** — install once, then run `cfd` from any folder, just like `npm` or `git`.
 - **Downloads to your current folder** — no more moving a the downloaded files around drives.
 - **Background download queue** — paste a second (or third, or tenth) `cfd` + `hf download` command while the first is still running. Each one queues up and starts automatically once the folder is free.
 - **Per-folder queues** — downloads to different folders run in parallel; only downloads *into the same folder* wait their turn (since `hf download` can only use one `.cache` at a time).

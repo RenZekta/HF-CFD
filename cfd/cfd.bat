@@ -48,7 +48,7 @@ if "%USER_INPUT%"=="" (
     echo   cfd uninstall       - remove cfd
     echo.
     echo Example:
-    echo   cfd hf download hf://prism-ml/Ternary-Bonsai-27B-gguf/Ternary-Bonsai-27B-mmproj-BF16
+    echo   cfd hf download hf://prism-ml/Bonsai-27B-gguf/Bonsai-27B-Q1_0.gguf
     endlocal
     exit /b 1
 )

@@ -8,10 +8,9 @@
 :: run one after another by a background worker window.
 ::
 :: Usage:
-::   cfd hf download hf://prism-ml/Ternary-Bonsai-27B-gguf/Ternary-Bonsai-27B-mmproj-BF16
+::   cfd hf download hf download hf://prism-ml/Bonsai-27B-gguf/Bonsai-27B-Q1_0.gguf
 ::   cfd status       - show active/current/queued downloads here
-::   cfd continue      - resume after a crash/interruption using saved queue data
-::   cfd unlock        - clear a stuck lock (e.g. worker window closed manually)
+::   cfd continue / c  - resume after a crash/interruption using saved queue data
 ::   cfd clear         - wipe the pending queue (and in-progress marker) here
 ::   cfd uninstall     - remove cfd from PATH and delete its files
 :: ===================================================
@@ -21,13 +20,9 @@ setlocal enabledelayedexpansion
 if /i "%~1"=="uninstall" ( call :uninstall & exit /b 0 )
 if /i "%~1"=="status"    ( call :status    & exit /b 0 )
 if /i "%~1"=="queue"     ( call :status    & exit /b 0 )
-if /i "%~1"=="unlock"    ( call :unlock    & exit /b 0 )
-if /i "%~1"=="u"         ( call :unlock    & exit /b 0 )
 if /i "%~1"=="clear"     ( call :clearqueue & exit /b 0 )
-if /i "%~1"=="continue"  ( call :resume    & exit /b 0 )
-if /i "%~1"=="c"         ( call :resume    & exit /b 0 )
-if /i "%~1"=="fc"        ( call :forcecontinue & exit /b 0 )
-if /i "%~1"=="force" if /i "%~2"=="continue" ( call :forcecontinue & exit /b 0 )
+if /i "%~1"=="continue"  ( call :forcecontinue & exit /b 0 )
+if /i "%~1"=="c"         ( call :forcecontinue & exit /b 0 )
 if /i "%~1"=="__worker__" ( call :worker_loop "%~2" & exit /b 0 )
 
 set "TARGET_DIR=%CD%"
@@ -41,9 +36,6 @@ if "%USER_INPUT%"=="" (
     echo   cfd hf download ^<hf://repo/path or model id^>
     echo   cfd status          - show active/current/queued downloads here
     echo   cfd continue / c    - resume after a crash/interruption
-    echo   cfd unlock / u      - clear a stuck lock
-    echo   cfd force continue  - unlock and resume in one step
-    echo   cfd fc              - same as "force continue"
     echo   cfd clear           - wipe the pending queue here
     echo   cfd uninstall       - remove cfd
     echo.
@@ -195,20 +187,6 @@ if exist "%QUEUE_FILE%" (
 endlocal
 exit /b 0
 
-:unlock
-setlocal enabledelayedexpansion
-set "LOCK_FILE=%CD%\.cfd.lock"
-if exist "%LOCK_FILE%" (
-    del /f /q "%LOCK_FILE%" >nul 2>&1
-    echo [CFD] Lock cleared for this folder.
-    echo [CFD] If you still have items queued, run "cfd continue" to resume them,
-    echo       or paste a new "cfd hf download ..." command to start fresh.
-) else (
-    echo [CFD] No lock file found here - nothing to clear.
-)
-endlocal
-exit /b 0
-
 :clearqueue
 setlocal enabledelayedexpansion
 set "QUEUE_FILE=%CD%\.cfd.queue"
@@ -233,29 +211,15 @@ exit /b 0
 
 :forcecontinue
 setlocal enabledelayedexpansion
-set "LOCK_FILE=%CD%\.cfd.lock"
-if exist "%LOCK_FILE%" (
-    del /f /q "%LOCK_FILE%" >nul 2>&1
-    echo [CFD] Lock cleared for this folder.
-)
-endlocal
-call :resume
-exit /b 0
-
-:resume
-setlocal enabledelayedexpansion
 set "WDIR=%CD%"
 set "LOCK_FILE=%WDIR%\.cfd.lock"
 set "QUEUE_FILE=%WDIR%\.cfd.queue"
 set "CURRENT_FILE=%WDIR%\.cfd.current"
 
-if exist "%LOCK_FILE%" (
-    echo [CFD] A lock file already exists for this folder.
-    echo [CFD] If a worker window is genuinely still running, just wait for it.
-    echo [CFD] If it isn't ^(e.g. after a crash^), run "cfd force continue" ^(or "cfd fc"^) to skip the check.
-    endlocal
-    exit /b 1
-)
+:: Clear any stale lock - a worker can't be genuinely running and reachable
+:: from this same folder at the same time, so it's always safe to clear it
+:: before resuming.
+if exist "%LOCK_FILE%" del /f /q "%LOCK_FILE%" >nul 2>&1
 
 set "CURRENT_CMD="
 if exist "%CURRENT_FILE%" (

@@ -2,12 +2,12 @@
 
 A tiny Windows CLI tool that makes downloading from Hugging Face as easy as `npm install`.
 
-Paste an `hf download` command in any folder, and CFD downloads straight into that folder — no more moving a `.bat` file around, no more waiting around for one download to finish before starting the next.
+Type `cfd` and paste your `hf download` command in any folder, and CFD calls HF to download straight into that folder.
 
 ## Features
 
 - **Callable from anywhere** — install once, then run `cfd` from any folder, just like `npm` or `git`.
-- **Downloads to your current folder** — no need to keep the script next to your models.
+- **Downloads to your current folder** — no more moving a the downloaded files around drives.
 - **Background download queue** — paste a second (or third, or tenth) `hf download` command while the first is still running. Each one queues up and starts automatically once the folder is free.
 - **Per-folder queues** — downloads to different folders run in parallel; only downloads *into the same folder* wait their turn (since `hf download` can only use one `.cache` at a time).
 - **Crash recovery** — if your PC crashes or the worker window gets closed mid-download, `cfd continue` picks up right where it left off.

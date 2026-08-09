@@ -10,7 +10,7 @@ Type `cfd` and paste your `hf download` command in any folder, and CFD calls HF 
 - **Downloads to your current folder** — no more moving a the downloaded files around drives.
 - **Background download queue** — paste a second (or third, or tenth) `cfd` + `hf download` command while the first is still running. Each one queues up and starts automatically once the folder is free.
 - **Per-folder queues** — downloads to different folders run in parallel; only downloads *into the same folder* wait their turn (since `hf download` can only use one `.cache` at a time).
-- **Crash recovery** — if your PC crashes or the worker window gets closed mid-download, `cfd force continue` / `cfd fc` picks up right where it left off.
+- **Crash recovery** — if your PC crashes or the worker window gets closed mid-download, `cfd continue` / `cfd c` picks up right where it left off.
 - **Self-installing** — adds itself to your PATH, cleans up any old copies, and can uninstall itself just as easily.
 
 ## Requirements
@@ -44,7 +44,7 @@ cfd hf download hf://prism-ml/Bonsai-27B-gguf/Bonsai-27B-Q1_0.gguf
 
 A **CFD Worker** window opens and starts downloading into your current folder. Your terminal is free immediately — `cd` into another folder or paste another `cfd` command right away.
 
-If you paste another download command **for the same folder** while one is already running, it's added to that folder's queue instead of starting a second worker:
+If you paste another cfd download command **for the same folder** while one is already running, it's added to that folder's downloads queue:
 
 ```
 cfd hf download hf://another-org/another-model
@@ -61,8 +61,6 @@ Once the current download finishes (and its temporary `.cache` folder is cleaned
 | `cfd hf download <link>` | | Downloads to the current folder, or queues if a download is already running here |
 | `cfd status` | `cfd queue` | Shows whether a worker is active, what's currently downloading, and what's queued |
 | `cfd continue` | `cfd c` | Resumes downloads after a crash/interruption, reusing the existing `.cache` |
-| `cfd unlock` | `cfd u` | Clears a stuck lock file (e.g. after force-closing a worker window) |
-| `cfd force continue` | `cfd fc` | Unlocks and resumes in one step — use when you're sure no worker is still running |
 | `cfd clear` | | Wipes the pending queue for the current folder |
 | `cfd uninstall` | | Removes `cfd` from PATH and deletes its installed files |
 
@@ -71,17 +69,9 @@ Once the current download finishes (and its temporary `.cache` folder is cleaned
 If your PC crashes or you force-close a CFD Worker window mid-download, reopen the same folder and run:
 
 ```
-cfd fc
+cfd c
 ```
-
-This clears the stale lock and re-queues whatever was in progress, ahead of anything still waiting. `hf download` handles the rest — it checks the existing `.cache` against what's already on disk and resumes/verifies rather than starting over.
-
-If you'd rather confirm nothing is actually still running before resuming, use the two-step version instead:
-
-```
-cfd unlock
-cfd continue
-```
+Or `cfd continue`. This clears the leftover lock and re-queues whatever was in progress, ahead of anything still waiting. `hf download` handles the rest — it checks the existing `.cache` against what's already on disk and resumes/verifies rather than starting over.
 
 ## Uninstalling
 

@@ -36,10 +36,10 @@ That's it — `install.bat`:
 
 ## Usage
 
-Open a terminal in whatever folder you want the files to land in, then paste the download command from the [Hugging Face website](https://huggingface.co) after `cfd`:
+Open a terminal in whatever folder you want the files to land in, type `cfd` and paste the "Download with hf CLI" command from the [Hugging Face website](https://huggingface.co). For example:
 
 ```
-cfd hf download hf://prism-ml/Ternary-Bonsai-27B-gguf/Ternary-Bonsai-27B-mmproj-BF16
+cfd hf download hf://prism-ml/Bonsai-27B-gguf/Bonsai-27B-Q1_0.gguf
 ```
 
 A **CFD Worker** window opens and starts downloading into your current folder. Your terminal is free immediately — `cd` into another folder or paste another `cfd` command right away.

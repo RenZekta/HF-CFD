@@ -9,6 +9,10 @@
 ::
 :: Usage:
 ::   cfd hf download hf download hf://prism-ml/Bonsai-27B-gguf/Bonsai-27B-Q1_0.gguf
+::   cfd https://huggingface.co/prism-ml/Bonsai-27B-gguf/resolve/main/Bonsai-27B-Q1_0.gguf?download=true
+::       (plain "download" button link, pasted as-is - a trailing
+::        "?download=true" is stripped automatically and the link is
+::        turned into a "curl -L -C - -O" command)
 ::   cfd status       - show active/current/queued downloads here
 ::   cfd continue / c  - resume after a crash/interruption using saved queue data
 ::   cfd clear         - wipe the pending queue (and in-progress marker) here
@@ -16,6 +20,11 @@
 :: ===================================================
 
 setlocal enabledelayedexpansion
+
+:: Literal double-quote character, used later to wrap a pasted URL in
+:: quotes when building a curl command. Must be defined here at the top
+:: level (not inside a parenthesized block) to avoid batch parsing issues.
+set QM=^"
 
 if /i "%~1"=="uninstall" ( call :uninstall & exit /b 0 )
 if /i "%~1"=="status"    ( call :status    & exit /b 0 )
@@ -34,24 +43,45 @@ if "%USER_INPUT%"=="" (
     echo ===================================================
     echo Usage:
     echo   cfd hf download ^<hf://repo/path or model id^>
+    echo   cfd ^<direct download URL, e.g. the "download" button link^>
     echo   cfd status          - show active/current/queued downloads here
     echo   cfd continue / c    - resume after a crash/interruption
     echo   cfd clear           - wipe the pending queue here
     echo   cfd uninstall       - remove cfd
     echo.
-    echo Example:
+    echo Examples:
     echo   cfd hf download hf://prism-ml/Bonsai-27B-gguf/Bonsai-27B-Q1_0.gguf
+    echo   cfd https://huggingface.co/prism-ml/Bonsai-27B-gguf/resolve/main/Bonsai-27B-Q1_0.gguf?download=true
     endlocal
     exit /b 1
 )
 
-:: Validate format: command must contain "hf download"
+:: Detect which of the two supported formats we were given:
+::   IS_HF  = 1 -> a "hf download ..." command, used as-is
+::   IS_URL = 1 -> a plain direct-download URL/link, converted to a curl command
+set "IS_HF=0"
 echo !USER_INPUT! | findstr /i /c:"hf download" >nul
-if errorlevel 1 (
+if not errorlevel 1 set "IS_HF=1"
+
+set "IS_URL=0"
+if /i "!USER_INPUT:~0,7!"=="http://"  set "IS_URL=1"
+if /i "!USER_INPUT:~0,8!"=="https://" set "IS_URL=1"
+
+if "!IS_HF!"=="0" if "!IS_URL!"=="0" (
     echo [Error] Invalid command format.
-    echo The command must contain "hf download ..."
+    echo Paste either an "hf download ..." command, or a direct download
+    echo URL ^(e.g. the "download" button link from a huggingface.co file page^).
     endlocal
     exit /b 1
+)
+
+if "!IS_HF!"=="0" if "!IS_URL!"=="1" (
+    :: Plain download-button URL, e.g. ...file.gguf?download=true
+    set "URL=!USER_INPUT!"
+    :: Strip a trailing "?download=true" if present, just in case
+    set "URL=!URL:?download=true=!"
+    set "USER_INPUT=curl -L -C - -O !QM!!URL!!QM!"
+    echo [CFD] Parsed as direct URL - will run: !USER_INPUT!
 )
 
 set "LOCK_FILE=%TARGET_DIR%\.cfd.lock"
@@ -126,7 +156,14 @@ echo ---------------------------------------------------
 echo [CFD] Downloading: !NEXT_CMD!
 echo ---------------------------------------------------
 
-!NEXT_CMD! --local-dir "%WDIR%"
+echo !NEXT_CMD! | findstr /i /c:"hf download" >nul
+if not errorlevel 1 (
+    !NEXT_CMD! --local-dir "%WDIR%"
+) else (
+    :: Direct-URL downloads (curl) already run in the target folder,
+    :: since the worker cd's into it above.
+    !NEXT_CMD!
+)
 
 if !errorlevel! equ 0 (
     if exist "%WDIR%\.cache" (

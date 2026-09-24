@@ -78,8 +78,13 @@ if "!IS_HF!"=="0" if "!IS_URL!"=="0" (
 if "!IS_HF!"=="0" if "!IS_URL!"=="1" (
     :: Plain download-button URL, e.g. ...file.gguf?download=true
     set "URL=!USER_INPUT!"
-    :: Strip a trailing "?download=true" if present, just in case
-    set "URL=!URL:?download=true=!"
+    :: Strip the trailing query string. A plain "download" button
+    :: link ends in ?download=true, but batch substitution cannot
+    :: use that literal as a pattern - the first "=" ends the
+    :: pattern and the rest becomes the replacement. Truncate at
+    :: the first "?" instead: everything after it is the query
+    :: string.
+    for /f "delims=?" %%A in ("!URL!") do set "URL=%%A"
     set "USER_INPUT=curl -L -C - -O !QM!!URL!!QM!"
     echo [CFD] Parsed as direct URL - will run: !USER_INPUT!
 )
